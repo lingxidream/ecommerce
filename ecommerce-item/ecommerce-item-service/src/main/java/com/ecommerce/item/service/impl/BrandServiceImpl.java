@@ -58,4 +58,28 @@ public class BrandServiceImpl implements IBrandService {
             this.brandMapper.insertBrandAndCategory(cid,brand.getId());
         });
     }
+
+    @Override
+    @Transactional
+    public void updateBrand(Brand brand, List<Long> cids) {
+        //修改品牌brand
+        this.brandMapper.updateByPrimaryKey(brand);
+        //删除中间表数据
+        this.brandMapper.deleteBrandAndCategory(brand.getId());
+        //新增中间表
+        cids.forEach(cid ->{
+            this.brandMapper.insertBrandAndCategory(cid,brand.getId());
+        });
+    }
+
+    @Override
+    @Transactional
+    public void deleteBrand(Brand brand){
+        //删除中间表数据
+        this.brandMapper.deleteBrandAndCategory(brand.getId());
+        //删除品牌brand
+        this.brandMapper.deleteByPrimaryKey(brand.getId());
+    }
+
+
 }

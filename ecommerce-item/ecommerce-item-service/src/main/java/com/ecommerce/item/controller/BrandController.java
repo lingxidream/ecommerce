@@ -39,5 +39,17 @@ public class BrandController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @PutMapping
+    public ResponseEntity<Void> updateBrand(Brand brand,@RequestParam("cids") List<Long> cids){
+        this.brandService.updateBrand(brand,cids);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteBrand(@RequestBody Brand brand){
+        this.brandService.deleteBrand(brand);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 
 }
