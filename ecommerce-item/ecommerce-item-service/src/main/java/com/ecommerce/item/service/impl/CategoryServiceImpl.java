@@ -7,6 +7,7 @@ import com.ecommerce.item.service.ICategoryService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,5 +29,13 @@ public class CategoryServiceImpl implements ICategoryService {
         return categories;
     }
 
-
+    @Override
+    public List<String> queryNameByBrandIds(List<Long> ids) {
+        List<Category> categories = this.categoryMapper.selectByIdList(ids);
+        List<String> names = new ArrayList<>();
+        for (Category item : categories) {
+            names.add(item.getName());
+        }
+        return names;
+    }
 }

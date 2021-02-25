@@ -19,4 +19,40 @@ public interface ISpecificationService {
      * @return
      */
     List<SpecParam> queryParam(Long gid);
+
+    /**
+     * 新增参数
+     * @param param
+     */
+    void insertParam(SpecParam param);
+
+    /**
+     * 修改参数
+     * @param param
+     */
+    void updateParams(SpecParam param);
+
+    /**
+     * 删除参数
+     * @param cid
+     */
+    void deleteParam(Long cid);
+
+    /**
+     * 添加分组
+     * @param group
+     */
+    void insertGroup(SpecGroup group);
+
+    /**
+     * 修改分组
+     * @param param
+     */
+    void updateGroup(SpecGroup param);
+
+    /**
+     * 删除分组
+     * @param cid
+     */
+    void deleteGroup(Long cid);
 }

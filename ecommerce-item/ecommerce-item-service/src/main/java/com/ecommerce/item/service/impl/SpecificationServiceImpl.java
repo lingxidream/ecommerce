@@ -36,4 +36,34 @@ public class SpecificationServiceImpl implements ISpecificationService {
         param.setGroupId(gid);
         return this.specParamMapper.select(param);
     }
+
+    @Override
+    public void insertParam(SpecParam param) {
+        this.specParamMapper.insertSelective(param);
+    }
+
+    @Override
+    public void updateParams(SpecParam param) {
+        this.specParamMapper.updateByPrimaryKey(param);
+    }
+
+    @Override
+    public void deleteParam(Long cid) {
+        this.specParamMapper.deleteByPrimaryKey(cid);
+    }
+
+    @Override
+    public void insertGroup(SpecGroup group){
+        this.specGroupMapper.insert(group);
+    }
+
+    @Override
+    public void updateGroup(SpecGroup param) {
+        this.specGroupMapper.updateByPrimaryKey(param);
+    }
+
+    @Override
+    public void deleteGroup(Long cid) {
+        this.specGroupMapper.deleteByPrimaryKey(cid);
+    }
 }
