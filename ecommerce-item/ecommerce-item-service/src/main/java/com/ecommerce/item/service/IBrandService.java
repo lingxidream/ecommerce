@@ -12,4 +12,18 @@ public interface IBrandService {
     void updateBrand(Brand brand,List<Long> cids);
 
     void deleteBrand(Brand brand);
+
+    /**
+     * 通过分类id查询品牌信息
+     * @param cid
+     * @return
+     */
+    List<Brand> queryBrandByCid(Long cid);
+
+    /**
+     * 根据id查品牌名
+     * @param id
+     * @return
+     */
+    Brand queryBrandById(Long id);
 }

@@ -14,4 +14,5 @@ public interface ICategoryService {
      * @return
      */
     List<String> queryNameByBrandIds(List<Long> ids);
+
 }

@@ -13,6 +13,7 @@
         <module>ecommerce-item</module>
         <module>ecommerce-common</module>
         <module>ecommerce-upload</module>
+        <module>ecommerce-search</module>
     </modules>
     <packaging>pom</packaging>
 

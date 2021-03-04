@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
+import sun.awt.SunHints;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -33,8 +34,13 @@ public class SpecificationController {
     }
 
     @GetMapping("params")
-    public ResponseEntity<List<SpecParam>> queryParams(@RequestParam("gid") Long gid){
-        List<SpecParam> params = this.specificationService.queryParam(gid);
+    public ResponseEntity<List<SpecParam>> queryParams(
+            @RequestParam(value = "gid",required = false) Long gid,
+            @RequestParam(value ="cid",required = false) Long cid,
+            @RequestParam(value ="generic",required = false) Boolean generic,
+            @RequestParam(value ="searching",required = false) Boolean searching
+    ){
+        List<SpecParam> params = this.specificationService.queryParam(gid,cid,generic,searching);
         if(CollectionUtils.isEmpty(params)){
             return ResponseEntity.notFound().build();
         }

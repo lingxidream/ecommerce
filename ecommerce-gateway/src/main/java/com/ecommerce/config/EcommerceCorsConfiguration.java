@@ -11,10 +11,12 @@ import org.springframework.web.filter.CorsFilter;
 public class EcommerceCorsConfiguration {
     @Bean
     public CorsFilter corsFilter(){
-        //1.添加CORS配置信息
+            //1.添加CORS配置信息
         CorsConfiguration config = new CorsConfiguration();
         //1) 允许的域，不要写*，否则cookie就无法使用
         config.addAllowedOrigin("http://manage.ecommerce.com");
+        config.addAllowedOrigin("http://www.ecommerce.com");
+        config.addAllowedOrigin("*");
         //2) 是否发送Cookie信息
         config.setAllowCredentials(true);
         //3) 允许的请求方式

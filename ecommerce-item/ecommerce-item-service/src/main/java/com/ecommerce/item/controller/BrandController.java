@@ -32,6 +32,24 @@ public class BrandController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("cid/{cid}")
+    public ResponseEntity<List<Brand>> queryBrandByCId(@PathVariable(value = "cid") Long cid){
+        List<Brand> brands = this.brandService.queryBrandByCid(cid);
+        if(CollectionUtils.isEmpty(brands)){
+            return  ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(brands);
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity<Brand> queryBrandById(@PathVariable("id") Long id){
+        Brand brand = this.brandService.queryBrandById(id);
+        if(brand == null){
+            return  ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(brand);
+    }
+
 
     @PostMapping
     public ResponseEntity<Void> saveBrand(Brand brand,@RequestParam("cids") List<Long> cids){

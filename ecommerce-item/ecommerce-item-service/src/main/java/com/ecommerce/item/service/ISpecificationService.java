@@ -18,7 +18,7 @@ public interface ISpecificationService {
      * @param gid
      * @return
      */
-    List<SpecParam> queryParam(Long gid);
+    List<SpecParam> queryParam(Long gid,Long cid,Boolean generic,Boolean searching);
 
     /**
      * 新增参数

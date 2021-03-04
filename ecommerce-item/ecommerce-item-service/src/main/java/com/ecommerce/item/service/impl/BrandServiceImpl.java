@@ -48,6 +48,17 @@ public class BrandServiceImpl implements IBrandService {
     }
 
     @Override
+    public List<Brand> queryBrandByCid(Long cid) {
+        return this.brandMapper.selectBrandByCid(cid);
+
+    }
+
+    @Override
+    public Brand queryBrandById(Long id) {
+        return this.brandMapper.selectByPrimaryKey(id);
+    }
+
+    @Override
     @Transactional
     public void saveBrand(Brand brand, List<Long> cids) {
         //新增品牌brand

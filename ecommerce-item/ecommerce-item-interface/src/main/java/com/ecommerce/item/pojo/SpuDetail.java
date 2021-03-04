@@ -1,5 +1,7 @@
 package com.ecommerce.item.pojo;
 
+import lombok.Data;
+
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -10,6 +12,7 @@ import javax.persistence.Table;
  * @description
  * @date 2020/11/16 15:11
  */
+@Data
 @Table(name="tb_spu_detail")
 public class SpuDetail {
     @Id
