@@ -3,6 +3,7 @@ package com.ecommerce.item.service;
 import com.ecommerce.common.pojo.PageResult;
 import com.ecommerce.item.bo.SpuBo;
 import com.ecommerce.item.pojo.Sku;
+import com.ecommerce.item.pojo.Spu;
 import com.ecommerce.item.pojo.SpuDetail;
 
 import java.util.List;
@@ -50,4 +51,8 @@ public interface GoodsService {
      * @param spuBo
      */
     void updateGoods(SpuBo spuBo);
+
+    Spu querySpuById(Long id);
+
+    void sendMessage(Long id, String type);
 }

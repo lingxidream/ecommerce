@@ -3,7 +3,9 @@ package com.ecommerce.item.api;
 import com.ecommerce.common.pojo.PageResult;
 import com.ecommerce.item.bo.SpuBo;
 import com.ecommerce.item.pojo.Sku;
+import com.ecommerce.item.pojo.Spu;
 import com.ecommerce.item.pojo.SpuDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,4 +52,12 @@ public interface GoodsApi {
      */
     @GetMapping("sku/list")
     List<Sku> querySkusBySpuId(@RequestParam("id") Long spuId);
+
+    /**
+     * 根据spu的id查询spu
+     * @param id
+     * @return
+     */
+    @GetMapping("spu/{id}")
+    Spu querySpuById(@PathVariable("id") Long id);
 }

@@ -14,6 +14,7 @@
         <module>ecommerce-common</module>
         <module>ecommerce-upload</module>
         <module>ecommerce-search</module>
+        <module>ecommerce-goods-web</module>
     </modules>
     <packaging>pom</packaging>
 

@@ -55,4 +55,6 @@ public interface ISpecificationService {
      * @param cid
      */
     void deleteGroup(Long cid);
+
+    List<SpecGroup> querySpecsByCid(Long cid);
 }

@@ -8,23 +8,34 @@ import com.ecommerce.search.client.GoodsClient;
 import com.ecommerce.search.client.SpecificationClient;
 import com.ecommerce.search.pojo.Goods;
 import com.ecommerce.search.pojo.SearchRequest;
+import com.ecommerce.search.pojo.SearchResult;
 import com.ecommerce.search.repository.GoodsRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.aggregation.AggregatedPage;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import javax.naming.Name;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author wyr
@@ -151,7 +162,7 @@ public class SearchService {
         return result;
     }
 
-    public PageResult<Goods> search(SearchRequest request) {
+    public SearchResult search(SearchRequest request) {
         String key = request.getKey();
         if(StringUtils.isBlank(request.getKey())){
             return null;
@@ -159,7 +170,10 @@ public class SearchService {
         //构建查询条件
         NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
         //1 对key进行全文检索查询
-        queryBuilder.withQuery(QueryBuilders.matchQuery("all",key).operator(Operator.AND));
+        //queryBuilder.withQuery(QueryBuilders.matchQuery("all",key).operator(Operator.AND));
+        BoolQueryBuilder boolQueryBuilder = bulidboolQueryBuilder(request);
+        queryBuilder.withQuery(boolQueryBuilder);
+
 
         // 2、通过sourceFilter设置返回的结果字段,我们只需要id、skus、subTitle
         queryBuilder.withSourceFilter(new FetchSourceFilter(
@@ -171,10 +185,167 @@ public class SearchService {
         int size = request.getSize();
         queryBuilder.withPageable(PageRequest.of(page-1,size));
 
+        //添加品牌和分类的聚合条件
+        String categoryAggName = "categories";
+        String brandAggName = "brands";
+
+        queryBuilder.addAggregation(AggregationBuilders.terms(categoryAggName).field("cid3"));
+        queryBuilder.addAggregation(AggregationBuilders.terms(brandAggName).field("brandId"));
+
         //4 查询获取结果
-        Page<Goods> pageInfo = this.goodsRepository.search(queryBuilder.build());
+        AggregatedPage<Goods> pageInfo = (AggregatedPage<Goods>)this.goodsRepository.search(queryBuilder.build());
+
+        // 解析聚合结果集
+        List<Map<String, Object>> categories = getCategoryAggResult(pageInfo.getAggregation(categoryAggName));
+        List<Brand> brands = getBrandAggResult(pageInfo.getAggregation(brandAggName));
+
+        //判断分类聚合的结果集大小，等于1
+        List<Map<String, Object>> specs = new ArrayList<>();
+        if(categories.size() == 1){
+            specs = getParamAggResult((Long) categories.get(0).get("id"),boolQueryBuilder);
+        }
 
         //封装结果并返回
-        return new PageResult<>(pageInfo.getTotalElements(),pageInfo.getTotalPages(),pageInfo.getContent());
+        return new SearchResult(pageInfo.getTotalElements(),pageInfo.getTotalPages(),pageInfo.getContent(),categories,brands,specs);
     }
+
+    /**
+     * 聚合出规格参数过滤条件
+     * @param id
+     * @param boolQueryBuilder
+     * @return
+     */
+    private List<Map<String, Object>> getParamAggResult(Long id, BoolQueryBuilder boolQueryBuilder) {
+        //创建自定义查询构造器
+        NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder();
+        //基于基本的查询条件，聚合规格参数
+        queryBuilder.withQuery(boolQueryBuilder);
+        //查询要聚合的规格参数
+        List<SpecParam> params = this.specificationClient.queryParams(null, id, null, true);
+        //添加聚合
+        params.forEach(param -> {
+            queryBuilder.addAggregation(AggregationBuilders.terms(param.getName()).field("specs."+param.getName()+".keyword"));
+        });
+        queryBuilder.withSourceFilter(new FetchSourceFilter(new String[]{},null));
+
+        //执行聚合查询
+        AggregatedPage<Goods> goodsPage = (AggregatedPage<Goods>) this.goodsRepository.search(queryBuilder.build());
+
+        //定义一个集合收集聚合结果集
+        List<Map<String, Object>> paramMapList = new ArrayList<>();
+
+        //解析聚合结果集
+        Map<String, Aggregation> stringAggregationMap = goodsPage.getAggregations().asMap();
+        stringAggregationMap.forEach((k,v)->{
+            Map<String, Object> map =new HashMap<>();
+            //放入规格参数名
+            map.put("k",k);
+            //收集规格参数值
+            List<Object> option = new ArrayList<>();
+            //解析每个聚合
+            StringTerms terms = (StringTerms) v;
+            // 遍历每个聚合中桶，把桶中key放入收集规格参数的集合中
+            terms.getBuckets().forEach(bucket -> option.add(bucket.getKeyAsString()));
+            map.put("options",option);
+            paramMapList.add(map);
+        });
+
+        return paramMapList;
+
+    }
+
+    /**
+     * 构建bool查询构建器
+     * @param request
+     * @return
+     */
+    private BoolQueryBuilder bulidboolQueryBuilder(SearchRequest request) {
+        BoolQueryBuilder boolQueryBuilder = new BoolQueryBuilder();
+        //添加基本查询条件
+        boolQueryBuilder.must(QueryBuilders.matchQuery("all",request.getKey()).operator(Operator.AND));
+
+        //添加过滤条件
+        if(CollectionUtils.isEmpty(request.getFilter())){
+            return boolQueryBuilder;
+        }
+        request.getFilter().forEach((k,v)->{
+            String key = k;
+            //如果过滤条件是品牌，过滤字段名是brandId
+            if(StringUtils.equals("品牌",key)){
+                key = "brandId";
+            }else if(StringUtils.equals("分类",key)){
+                //过滤条件是分类，规律字段为 cid3
+                key = "cid3";
+            }else {
+                //规格参数名，过滤字段：specs.key.keyword
+                key = "specs."+ key + ".keyword";
+            }
+            boolQueryBuilder.filter(QueryBuilders.termQuery(key,v));
+        });
+
+        return boolQueryBuilder;
+    }
+
+    /**
+     * 解析分类
+     * @param aggregation
+     * @return
+     */
+    private List<Map<String, Object>> getCategoryAggResult(Aggregation aggregation) {
+        //处理聚合结果集
+        LongTerms terms = (LongTerms) aggregation;
+        //获取所有分类id桶
+        List<LongTerms.Bucket> buckets = terms.getBuckets();
+        //定义一个品牌集合，搜集所有的品牌对象
+        //List<Map<String, Object>> categories = new ArrayList<>();
+        //解析所有的id桶，查询品牌
+        return buckets.stream().map(bucket -> {
+            long cid = bucket.getKeyAsNumber().longValue();
+            List<String> name = this.categoryClient.queryNamesByIds(Collections.singletonList(cid));
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", cid);
+            map.put("nmae", name.get(0));
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 解析品牌聚合结果集
+     * @param aggregation
+     * @return
+     */
+    private List<Brand> getBrandAggResult(Aggregation aggregation) {
+        //处理聚合结果集
+        LongTerms terms = (LongTerms) aggregation;
+        //获取所有品牌id桶
+        List<LongTerms.Bucket> buckets = terms.getBuckets();
+        return buckets.stream().map(bucket -> {
+            return this.brandClient.queryBrandById(bucket.getKeyAsNumber().longValue());
+        }).collect(Collectors.toList());
+    }
+
+
+    /**
+     * 根据商品id创建索引库
+     * @param id
+     * @throws IOException
+     */
+    public void createIndex(Long id) throws IOException {
+        Spu spu = this.goodsClient.querySpuById(id);
+        //构建商品
+        Goods goods = this.bulidGoods(spu);
+        //保存到索引库
+        goodsRepository.save(goods);
+    }
+
+    /**
+     * 根据商品id删除索引库
+     * @param id
+     */
+    public void deleteIndex(Long id){
+        this.goodsRepository.deleteById(id);
+    }
+
+
+
 }

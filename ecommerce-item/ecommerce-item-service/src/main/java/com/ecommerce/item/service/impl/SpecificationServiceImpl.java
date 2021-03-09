@@ -69,4 +69,15 @@ public class SpecificationServiceImpl implements ISpecificationService {
     public void deleteGroup(Long cid) {
         this.specGroupMapper.deleteByPrimaryKey(cid);
     }
+
+    @Override
+    public List<SpecGroup> querySpecsByCid(Long cid) {
+        // 查询规格组
+        List<SpecGroup> groups = this.querySpecGroup(cid);
+        groups.forEach(g -> {
+            // 查询组内参数
+            g.setParams(this.queryParam(g.getId(), null, null, null));
+        });
+        return groups;
+    }
 }

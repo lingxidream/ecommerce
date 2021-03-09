@@ -15,6 +15,10 @@ import com.github.pagehelper.PageInfo;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ibatis.transaction.Transaction;
 import org.bouncycastle.jcajce.provider.util.SecretKeyUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,6 +42,9 @@ import java.util.stream.Collectors;
  */
 @Service
 public class GoodsServiceImpl implements GoodsService {
+
+    private static final Logger logger = LoggerFactory.getLogger(GoodsServiceImpl.class);
+
     @Resource
     private SpuMapper spuMapper;
 
@@ -52,6 +59,9 @@ public class GoodsServiceImpl implements GoodsService {
     private SkuMapper skuMapper;
     @Resource
     private StockMapper stockMapper;
+
+    @Resource
+    private AmqpTemplate amqpTemplate;
 
 
     @Override
@@ -94,7 +104,7 @@ public class GoodsServiceImpl implements GoodsService {
     @Override
     public void saveGoods(SpuBo spuBo) {
         //新增spu
-        spuBo.setId(null);
+        //spuBo.setId(null);
         spuBo.setCreateTime(new Date());
         spuBo.setSaleable(true);
         spuBo.setValid(true);
@@ -107,6 +117,8 @@ public class GoodsServiceImpl implements GoodsService {
         this.spuDetailMapper.insertSelective(spuDetail);
 
         saveSkuAndStock(spuBo);
+
+        sendMessage(spuBo.getId(),"insert");
     }
 
     private void saveSkuAndStock(SpuBo spuBo){
@@ -175,6 +187,23 @@ public class GoodsServiceImpl implements GoodsService {
 
         //更新spudetail
         this.spuDetailMapper.updateByPrimaryKeySelective(spuBo.getSpuDetail());
+
+        sendMessage(spuBo.getId(),"update");
+    }
+
+    @Override
+    public Spu querySpuById(Long id) {
+        return this.spuMapper.selectByPrimaryKey(id);
+    }
+
+    @Override
+    public void sendMessage(Long id, String type) {
+
+        try {
+            amqpTemplate.convertAndSend("item."+type,id);
+        } catch (AmqpException e) {
+            logger.error("{}商品消息发送异常，商品id：{}", type, id, e);
+        }
 
     }
 }

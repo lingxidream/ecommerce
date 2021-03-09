@@ -3,6 +3,7 @@ package com.ecommerce.search.controller;
 import com.ecommerce.common.pojo.PageResult;
 import com.ecommerce.search.pojo.Goods;
 import com.ecommerce.search.pojo.SearchRequest;
+import com.ecommerce.search.pojo.SearchResult;
 import com.ecommerce.search.service.SearchService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,8 @@ public class SearchController {
     private SearchService searchService;
 
     @PostMapping("page")
-    public ResponseEntity<PageResult<Goods>> search(@RequestBody SearchRequest request){
-        PageResult<Goods> result = this.searchService.search(request);
+    public ResponseEntity<SearchResult> search(@RequestBody SearchRequest request){
+        SearchResult result = this.searchService.search(request);
         if (result == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
