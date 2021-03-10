@@ -3,13 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>ecommerce-item</artifactId>
-        <groupId>com.ecommerce.item</groupId>
+        <artifactId>ecommerce-user</artifactId>
+        <groupId>com.ecommerce.user</groupId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>ecommerce-item-interface</artifactId>
+    <artifactId>ecommerce-user-interface</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <dependencies>
         <dependency>
@@ -32,7 +32,10 @@
             <optional>true</optional>
             <version>1.18.12</version>
         </dependency>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
     </dependencies>
-
 
 </project>
