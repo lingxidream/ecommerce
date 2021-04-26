@@ -17,6 +17,7 @@
         <module>ecommerce-goods-web</module>
         <module>ecommerce-user</module>
         <module>ecommerce-sms-service</module>
+        <module>ecommerce-auth</module>
     </modules>
     <packaging>pom</packaging>
 
